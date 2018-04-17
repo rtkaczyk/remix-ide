@@ -12,6 +12,7 @@ require('brace/ext/language_tools')
 require('brace/ext/searchbox')
 var langTools = ace.acequire('ace/ext/language_tools')
 require('./mode-solidity.js')
+require('./mode-iele.js')
 var styleGuide = require('../ui/styles-guide/theme-chooser')
 var styles = styleGuide.chooser()
 
@@ -67,6 +68,7 @@ function Editor (opts = {}) {
   var self = this
   var el = yo`<div id="input"></div>`
   var editor = ace.edit(el)
+  window.editor = editor
   if (styles.appProperties.aceTheme) {
     editor.setTheme('ace/theme/' + styles.appProperties.aceTheme)
   }
@@ -147,6 +149,13 @@ function Editor (opts = {}) {
     editor.setSession(sessions[currentSession])
     editor.setReadOnly(readOnlySessions[currentSession])
     editor.focus()
+
+    // @rv: add .iele support.
+    if (path.endsWith('.iele')) {
+      editor.session.setMode('ace/mode/iele')
+    } else {
+      editor.session.setMode('ace/mode/javascript')
+    }
   }
 
   this.open = function (path, content) {

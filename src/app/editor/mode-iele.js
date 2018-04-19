@@ -40,6 +40,16 @@ ace.define('ace/mode/iele', ['require', 'exports', 'module', 'ace/lib/oop', 'ace
           token: 'identifier',
           regex: /[%@][-a-zA-Z$\._][-a-zA-Z$\._0-9]*/
         },
+        // Function declaration
+        // I write it in two cases because one case doesn't work properly.
+        {
+          token: ['keyword', 'text', 'entity.name.function'],
+          regex: /(define)(\s+)([%@][-a-zA-Z$\._][-a-zA-Z$\._0-9]*)\b/
+        },
+        {
+          token: ['keyword', 'text', 'keyword', 'text', 'entity.name.function'],
+          regex: /(define)(\s+)(public)(\s+)([%@][-a-zA-Z$\._][-a-zA-Z$\._0-9]*)\b/
+        },
         {
           token: 'comment',
           regex: /\/\*/,

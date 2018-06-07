@@ -896,20 +896,33 @@ Please make a backup of your contracts and start using http://remix.ethereum.org
     if (currentFile) {
       if (/.(.sol)$/.exec(currentFile)) {
         // only compile *.sol file.
-        var target = currentFile
-        var sources = {}
-        var provider = fileManager.fileProviderOf(currentFile)
-        if (provider) {
-          provider.get(target, (error, content) => {
-            if (error) {
-              console.log(error)
-            } else {
-              sources[target] = { content }
-              compiler.compile(sources, target)
-            }
+        if (config.get('compileToIELE')) { // Compile to IELE bytecode
+          var apiGateway = 'https://5c177bzo9e.execute-api.us-east-1.amazonaws.com/prod'
+          window["GLOBAL_RES"] = {}
+          fetch(apiGateway, {
+            method: "POST",
+            cors: true,
+            body: JSON.stringify({"method": "sol2iele_asm", "params": ["mortal.sol", {"owned.sol":"pragma solidity ^0.4.9;\ncontract owned {\n    function owned() { owner = msg.sender; }\n    address owner;\n}","mortal.sol":"pragma solidity ^0.4.9;\nimport \"./owned.sol\";\ncontract mortal is owned{\n    function kill() {\n        selfdestruct(owner);\n    }\n}"}]})
+          }).then(response=>response.json()).then(json => {
+            window["GLOBAL_RES"] = json
+            console.log(json)
           })
-        } else {
-          console.log('cannot compile ' + currentFile + '. Does not belong to any explorer')
+        } else { // Compile to EVM bytecode
+          var target = currentFile
+          var sources = {}
+          var provider = fileManager.fileProviderOf(currentFile)
+          if (provider) {
+            provider.get(target, (error, content) => {
+              if (error) {
+                console.log(error)
+              } else {
+                sources[target] = { content }
+                compiler.compile(sources, target)
+              }
+            })
+          } else {
+            console.log('cannot compile ' + currentFile + '. Does not belong to any explorer')
+          }
         }
       }
     }

@@ -20,6 +20,7 @@ module.exports = class CompileTab {
     self._view = {
       el: null,
       autoCompile: null,
+      compileToIELE: null,
       compileButton: null,
       warnCompilationSlow: null,
       compileIcon: null,
@@ -30,6 +31,7 @@ module.exports = class CompileTab {
     }
     self.data = {
       autoCompile: self._opts.config.get('autoCompile'),
+      compileToIELE: self._opts.config.get('compileToIELE'),
       compileTimeout: null,
       contractsDetails: {},
       maxTime: 1000,
@@ -137,7 +139,9 @@ module.exports = class CompileTab {
     self._view.compileIcon = yo`<i class="fa fa-refresh ${css.icon}" aria-hidden="true"></i>`
     self._view.compileButton = yo`<div class="${css.compileButton}" onclick=${compile} id="compile" title="Compile source code">${self._view.compileIcon} Start to compile</div>`
     self._view.autoCompile = yo`<input class="${css.autocompile}" onchange=${updateAutoCompile} id="autoCompile" type="checkbox" title="Auto compile">`
+    self._view.compileToIELE = yo`<input class="${css.autocompile}" onchange=${updateCompileToIELE} id="compileToIELE" type="checkbox" title="Compile to IELE">`
     if (self.data.autoCompile) self._view.autoCompile.setAttribute('checked', '')
+    if (self.data.compileToIELE) self._view.compileToIELE.setAttribute('checked', '')
     self._view.compileContainer = yo`
       <div class="${css.compileContainer}">
         <div class="${css.compileButtons}">
@@ -145,6 +149,10 @@ module.exports = class CompileTab {
           <div class="${css.autocompileContainer}">
             ${self._view.autoCompile}
             <span class="${css.autocompileText}">Auto compile</span>
+          </div>
+          <div class="${css.autocompileContainer}">
+            ${self._view.compileToIELE}
+            <span class="${css.autocompileText}">Compile to IELE</span>
           </div>
           ${self._view.warnCompilationSlow}
         </div>
@@ -180,6 +188,7 @@ module.exports = class CompileTab {
       'web3Deploy': 'Copy/paste this code to any JavaScript/Web3 console to deploy this contract'
     }
     function updateAutoCompile (event) { self._opts.config.set('autoCompile', self._view.autoCompile.checked) }
+    function updateCompileToIELE (event) { self._opts.config.set('compileToIELE', self._view.compileToIELE.checked) }
     function compile (event) { self._api.runCompiler() }
     function details () {
       const select = self._view.contractNames

@@ -896,33 +896,72 @@ Please make a backup of your contracts and start using http://remix.ethereum.org
     if (currentFile) {
       if (/.(.sol)$/.exec(currentFile)) {
         // only compile *.sol file.
+        var target = currentFile
+        var sources = {}
+        var provider = fileManager.fileProviderOf(currentFile)
+        if (provider) {
+          provider.get(target, (error, content) => {
+            if (error) {
+              console.log(error)
+            } else {
+              sources[target] = { content }
+              compiler.compile(sources, target)
+            }
+          })
+        } else {
+          console.log('cannot compile ' + currentFile + '. Does not belong to any explorer')
+        }
+
         if (config.get('compileToIELE')) { // Compile to IELE bytecode
           var apiGateway = 'https://5c177bzo9e.execute-api.us-east-1.amazonaws.com/prod'
-          window["GLOBAL_RES"] = {}
-          fetch(apiGateway, {
-            method: "POST",
-            cors: true,
-            body: JSON.stringify({"method": "sol2iele_asm", "params": ["mortal.sol", {"owned.sol":"pragma solidity ^0.4.9;\ncontract owned {\n    function owned() { owner = msg.sender; }\n    address owner;\n}","mortal.sol":"pragma solidity ^0.4.9;\nimport \"./owned.sol\";\ncontract mortal is owned{\n    function kill() {\n        selfdestruct(owner);\n    }\n}"}]})
-          }).then(response=>response.json()).then(json => {
-            window["GLOBAL_RES"] = json
-            console.log(json)
-          })
-        } else { // Compile to EVM bytecode
-          var target = currentFile
-          var sources = {}
-          var provider = fileManager.fileProviderOf(currentFile)
-          if (provider) {
-            provider.get(target, (error, content) => {
-              if (error) {
-                console.log(error)
-              } else {
-                sources[target] = { content }
-                compiler.compile(sources, target)
-              }
-            })
-          } else {
-            console.log('cannot compile ' + currentFile + '. Does not belong to any explorer')
+          var params = [currentFile, {}]
+          for (var filePath in sources) {
+            params[1][filePath] = sources[filePath].content
           }
+          window['fetch'](apiGateway, {
+            method: 'POST',
+            cors: true,
+            body: JSON.stringify({
+              method: 'sol2iele_asm',
+              params: params
+            })
+          }).then(response=>response.json()).then(json => {
+            if (!json['data'] || !json['success']) {
+              console.log('failed to compile solidity to iele: ', json)
+              return 
+            } 
+            var data = json['data'].split('\n')
+            data.push('\n')
+            var map = {} // key is filePath, value is content
+            var start = false
+            var fileName = ""
+            var content = ""
+            for (var i = 0; i < data.length; i++) {
+              if (data[i].match(/^IELE\s+assembly\s*\:/)) {
+                start = true
+              } else if (start) {
+                if (data[i].match(/^===+/) || i === data.length - 1) {
+                  start = false
+                  map[fileName] += content
+                  content = ""
+                } else { 
+                  content += (data[i] + '\n')
+
+                  var contractNameMatch = data[i].match(/contract\s+\"(.+?)\"/)
+                  if (contractNameMatch) {
+                    fileName = contractNameMatch[1].slice(0, contractNameMatch[1].lastIndexOf(':')).trim()
+                    if (! (fileName in map)) {
+                      map[fileName] = ''
+                    }
+                  }
+                }
+              }
+            }
+            // create .iele file
+            for (var fileName in map) {
+              self._api.filesProviders['browser'].set(fileName.replace(/\.sol$/, '.iele'), map[fileName])
+            }  
+          })
         }
       }
     }

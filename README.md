@@ -105,3 +105,7 @@ After that, follow these steps:
 ## Documentation
 
 To see details about how to use Remix for developing and/or debugging Solidity contracts, please see [our documentation page](https://remix.readthedocs.io)
+
+
+## References
+* [Web3 sendRawTransaction](https://ethereum.stackexchange.com/questions/36358/how-to-properly-create-a-raw-transaction-and-sign-it-using-web3-in-browser?rq=1&utm_medium=organic&utm_source=google_rich_qa&utm_campaign=google_rich_qa)

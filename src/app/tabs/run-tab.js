@@ -133,7 +133,11 @@ function runTab (appAPI = {}, appEvents = {}, opts = {}) {
       }, setFinalContext)
     }, (alertMsg) => {
       modalDialogCustom.alert(alertMsg)
-    }, setFinalContext)
+    }, setFinalContext/*, 
+    (context)=> { // rvCb
+      console.log('@rvCb: ', context)
+      setFinalContext()
+    }*/)
   })
 
   selectExEnv.value = executionContext.getProvider()
@@ -158,20 +162,29 @@ function runTab (appAPI = {}, appEvents = {}, opts = {}) {
 
 function fillAccountsList (appAPI, opts, container) {
   var $txOrigin = $(container.querySelector('#txorigin'))
-  $txOrigin.empty()
-  opts.udapp.getAccounts((err, accounts) => {
-    if (err) { addTooltip(`Cannot get account list: ${err}`) }
-    if (accounts && accounts[0]) {
-      for (var a in accounts) { $txOrigin.append($('<option />').val(accounts[a]).text(accounts[a])) }
-      $txOrigin.val(accounts[0])
-    } else {
-      $txOrigin.val('unknown')
-    }
-  })
+  if (executionContext.getProvider() === 'kevm-testnet') { // cardano kevm testnet
+    $txOrigin.hide()
+  } else {
+    $txOrigin.show()
+    $txOrigin.empty()
+    opts.udapp.getAccounts((err, accounts) => {
+      if (err) { addTooltip(`Cannot get account list: ${err}`) }
+      if (accounts && accounts[0]) {
+        for (var a in accounts) { $txOrigin.append($('<option />').val(accounts[a]).text(accounts[a])) }
+        $txOrigin.val(accounts[0])
+      } else {
+        $txOrigin.val('unknown')
+      }
+    })
+  }
 }
 
 function updateAccountBalances (container, appAPI) {
-  var accounts = $(container.querySelector('#txorigin')).children('option')
+  var $txOrigin = $(container.querySelector('#txorigin'))
+  if (executionContext.getProvider() === 'kevm-testnet') { // cardano kevm testnet
+    return
+  }
+  var accounts = $txOrigin.children('option')
   accounts.each(function (index, value) {
     (function (acc) {
       appAPI.getBalance(accounts[acc].value, function (err, res) {
@@ -461,9 +474,15 @@ function settings (container, appAPI, appEvents, opts) {
             title="Execution environment does not connect to any node, everything is local and in memory only."
             value="vm" checked name="executionContext"> JavaScript VM
           </option>
+          <!--
+          <option id="kevm-testnet-mode"
+            title="KEVM Testnet"
+            value="kevm-testnet" name="executionContext"> KEVM Testnet
+          </option>
+          -->
           <option id="injected-mode"
             title="Execution environment has been provided by Metamask or similar provider."
-            value="injected" checked name="executionContext"> Injected Web3
+            value="injected" name="executionContext"> Injected Web3
           </option>
           <option id="web3-mode"
             title="Execution environment connects to node at localhost (or via IPC if available), transactions will be sent to the network and can cause loss of money or worse!

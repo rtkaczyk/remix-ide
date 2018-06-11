@@ -8,16 +8,19 @@ module.exports = (contractName, contract, compiledSource) => {
 }
 
 var getDetails = function (contractName, contract, source) {
+  console.log('@contractParser.js getDetails: ', contractName, contract, source)
   var detail = {}
   detail.name = contractName
   detail.metadata = contract.metadata
-  if (contract.evm.bytecode.object) {
+  if (contract.evm && contract.evm.bytecode.object) {
     detail.bytecode = contract.evm.bytecode.object
+  } else if (contract.ielevm && contract.ielevm.bytecode.object) {
+    detail.bytecode = contract.ielevm.bytecode.object
   }
 
   detail.abi = contract.abi
 
-  if (contract.evm.bytecode.object) {
+  if (contract.evm && contract.evm.bytecode.object) {
     detail.bytecode = contract.evm.bytecode
     detail.web3Deploy = gethDeploy(contractName.toLowerCase(), contract.abi, contract.evm.bytecode.object)
 
@@ -25,23 +28,35 @@ var getDetails = function (contractName, contract, source) {
     if (detail.metadataHash) {
       detail.swarmLocation = 'bzzr://' + detail.metadataHash
     }
+  } else if (contract.ielevm && contract.ielevm.bytecode.object) {
+    detail.bytecode = contract.ielevm.bytecode
+    detail.web3Deploy = 'to be implemented'
+    detail.metadataHash = 'to be implemented'
+    detail.swarmLocation = 'to be implemented'
   }
 
   detail.functionHashes = {}
-  for (var fun in contract.evm.methodIdentifiers) {
-    detail.functionHashes[contract.evm.methodIdentifiers[fun]] = fun
+  if (contract.evm) {
+    for (var fun in contract.evm.methodIdentifiers) {
+      detail.functionHashes[contract.evm.methodIdentifiers[fun]] = fun
+    }
   }
+  // TODO: support function hashes for IELE
 
-  detail.gasEstimates = formatGasEstimates(contract.evm.gasEstimates)
+  if (contract.evm) {
+    detail.gasEstimates = formatGasEstimates(contract.evm.gasEstimates)
+  } else {
+    detail.gasEstimates = formatGasEstimates(contract.ielevm.gasEstimates)
+  }
 
   detail.devdoc = contract.devdoc
   detail.userdoc = contract.userdoc
 
-  if (contract.evm.deployedBytecode && contract.evm.deployedBytecode.object.length > 0) {
+  if (contract.evm && contract.evm.deployedBytecode && contract.evm.deployedBytecode.object.length > 0) {
     detail['Runtime Bytecode'] = contract.evm.deployedBytecode
   }
 
-  if (source && contract.assembly !== null) {
+  if (source && contract.assembly !== null && contract.evm) {
     detail['Assembly'] = formatAssemblyText(contract.evm.legacyAssembly, '', source.content)
   }
 

@@ -296,6 +296,9 @@ function contractDropdown (events, appAPI, appEvents, opts, self) {
   instanceContainer.appendChild(self._view.noInstancesText)
   var compFails = yo`<i title="Contract compilation failed. Please check the compile tab for more information." class="fa fa-times-circle ${css.errorIcon}" ></i>`
   appEvents.compiler.register('compilationFinished', function (success, data, source) {
+    console.log('@run-tab.js compilationFinished:\n', success, data, source)
+    // TODO: @rv support .iele
+    if (!source.target.endsWith('.sol')) {return;}
     getContractNames(success, data)
     if (success) {
       compFails.style.display = 'none'

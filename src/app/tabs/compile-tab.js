@@ -79,6 +79,7 @@ module.exports = class CompileTab {
       self._view.compileIcon.setAttribute('title', '')
     })
     self._events.compiler.register('compilationFinished', function finish (success, data, source) {
+      console.log('@compile-tab.js compilationFinished: ', success, data, source)
       if (self._view.compileIcon) {
         const compileTab = document.querySelector('.compileView')
         compileTab.style.color = styles.colors.black
@@ -93,8 +94,11 @@ module.exports = class CompileTab {
       self._view.contractNames.innerHTML = ''
       if (success) {
         self._view.contractNames.removeAttribute('disabled')
+        console.log('@@ visitContracts 1');
         self._opts.compiler.visitContracts(contract => {
+          console.log('@@ visitContracts 1: ', contract)
           self.data.contractsDetails[contract.name] = parseContracts(contract.name, contract.object, self._opts.compiler.getSource(contract.file))
+          console.log('@@ visitContracts 1 => contractDetail: ', self.data.contractsDetails[contract.name])
           var contractName = yo`<option>${contract.name}</option>`
           self._view.contractNames.appendChild(contractName)
         })
@@ -119,6 +123,7 @@ module.exports = class CompileTab {
         })
       }
       if (!error && data.contracts) {
+        console.log('@@ visitContracts 2');
         self._opts.compiler.visitContracts((contract) => {
           self._opts.renderer.error(contract.name, self._view.errorContainer, {type: 'success'})
         })
@@ -191,6 +196,7 @@ module.exports = class CompileTab {
     function updateCompileToIELE (event) { self._opts.config.set('compileToIELE', self._view.compileToIELE.checked) }
     function compile (event) { self._api.runCompiler() }
     function details () {
+      console.log('@ click details')
       const select = self._view.contractNames
       if (select.children.length > 0 && select.selectedIndex >= 0) {
         const contractName = select.children[select.selectedIndex].innerHTML

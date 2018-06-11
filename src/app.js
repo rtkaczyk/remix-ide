@@ -894,8 +894,8 @@ Please make a backup of your contracts and start using http://remix.ethereum.org
     editor.clearAnnotations()
     var currentFile = config.get('currentFile')
     if (currentFile) {
-      if (/.(.sol)$/.exec(currentFile)) {
-        // only compile *.sol file.
+      if (/.(.sol|.iele)$/.exec(currentFile)) {
+        // only compile *.sol file and *.iele file.
         var target = currentFile
         var sources = {}
         var provider = fileManager.fileProviderOf(currentFile)
@@ -905,13 +905,14 @@ Please make a backup of your contracts and start using http://remix.ethereum.org
               console.log(error)
             } else {
               sources[target] = { content }
-              compiler.compile(sources, target)
+              compiler.compile(sources, target, config.get('compileToIELE'))
             }
           })
         } else {
           console.log('cannot compile ' + currentFile + '. Does not belong to any explorer')
         }
 
+        /*
         if (config.get('compileToIELE')) { // Compile to IELE bytecode
           var apiGateway = 'https://5c177bzo9e.execute-api.us-east-1.amazonaws.com/prod'
           var params = [currentFile, {}]
@@ -966,6 +967,7 @@ Please make a backup of your contracts and start using http://remix.ethereum.org
             }  
           })
         }
+        */
       }
     }
   }

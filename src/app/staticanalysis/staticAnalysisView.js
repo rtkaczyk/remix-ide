@@ -21,6 +21,10 @@ function staticAnalysisView (appAPI, compilerEvent) {
   this.lastCompilationResult = null
   var self = this
   compilerEvent.register('compilationFinished', function (success, data, source) {
+    console.log('@staticAnalysisView.js compilationFinished:\n', success, data, source)
+    // TODO: @rv add .iele support
+    if (!source.target.endsWith('.sol')) { return; }
+    
     self.lastCompilationResult = null
     $('#staticanalysisresult').empty()
     if (success) {

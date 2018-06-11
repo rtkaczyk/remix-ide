@@ -916,21 +916,24 @@ Please make a backup of your contracts and start using http://remix.ethereum.org
           var apiGateway = 'https://5c177bzo9e.execute-api.us-east-1.amazonaws.com/prod'
           var params = [currentFile, {}]
           for (var filePath in sources) {
-            params[1][filePath] = sources[filePath].content
+            if (filePath.endsWith('.sol')) {
+              params[1][filePath] = sources[filePath].content
+            }
           }
           window['fetch'](apiGateway, {
             method: 'POST',
             cors: true,
             body: JSON.stringify({
               method: 'sol2iele_asm',
-              params: params
+              params: params,
+              jsonrpc: '2.0'
             })
           }).then(response=>response.json()).then(json => {
-            if (!json['data'] || !json['success']) {
+            if (!json['result'] || json['error']) {
               console.log('failed to compile solidity to iele: ', json)
               return 
             } 
-            var data = json['data'].split('\n')
+            var data = json['result'].split('\n')
             data.push('\n')
             var map = {} // key is filePath, value is content
             var start = false

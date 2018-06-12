@@ -63,6 +63,7 @@ UniversalDApp.prototype.reset = function (contracts, transactionContextAPI) {
 
 UniversalDApp.prototype.newAccount = function (password, cb) {
   if (!executionContext.isVM()) {
+    /*
     if (!this._api.personalMode()) {
       return cb('Not running in personal mode')
     }
@@ -73,6 +74,10 @@ UniversalDApp.prototype.newAccount = function (password, cb) {
         executionContext.web3().personal.newAccount(passphrase, cb)
       }
     }, () => {})
+    */
+    var prvKey = Buffer.from('2dde7b79d50730e24f82d426cb359158da58b1e2c0373d4d77916a5d8af606e4', 'hex')
+    var address = '0x' + ethJSUtil.privateToAddress(prvKey).toString('hex')
+    cb(null, address)
   } else {
     var privateKey
     do {
@@ -249,6 +254,7 @@ UniversalDApp.prototype.getInputs = function (funABI) {
 
 UniversalDApp.prototype.runTx = function (args, cb) {
   const self = this
+  console.log("starting to runTx")
   async.waterfall([
     function getGasLimit (next) {
       if (self.transactionContextAPI.getGasLimit) {
@@ -293,6 +299,7 @@ UniversalDApp.prototype.runTx = function (args, cb) {
       var timestamp = Date.now()
 
       self.event.trigger('initiatingTransaction', [timestamp, tx, payLoad])
+      console.log("about to call TxRunner")
       self.txRunner.rawRun(tx,
 
         (network, tx, gasEstimation, continueTxExecution, cancelCb) => {
